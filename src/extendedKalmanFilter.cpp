@@ -197,13 +197,21 @@ void ExtendedKalmanFilter::predict(){
 }
 
 void ExtendedKalmanFilter::correct(){
+    ROS_INFO_STREAM("Correcting");
 
-    Eigen::VectorXd stateSubset(updateSize);                              // x (in most literature)
-    Eigen::VectorXd measurementSubset(updateSize);                        // z
-    Eigen::MatrixXd measurementCovarianceSubset(updateSize, updateSize);  // R
-    Eigen::MatrixXd stateToMeasurementSubset(updateSize, state_.rows());  // H
-    Eigen::MatrixXd kalmanGainSubset(state_.rows(), updateSize);          // K
-    Eigen::VectorXd innovationSubset(updateSize);                         // z - Hx
+    std::vector<int> updateVector;
+    for(int i = 0; i<measurement.dataToUse.size(); i++){
+        if(measurement.dataToUse[i] == 1)
+            updateVector.push_back(i);
+    }
+
+
+    Eigen::VectorXd stateSubset(updateVector.size());                              // x (in most literature)
+    Eigen::VectorXd measurementSubset(updateVector.size());                        // z
+    Eigen::MatrixXd measurementCovarianceSubset(updateVector.size(), updateVector.size());  // R
+    Eigen::MatrixXd stateToMeasurementSubset(updateVector.size(), state_.rows());  // H
+    Eigen::MatrixXd kalmanGainSubset(state_.rows(), updateVector.size());          // K
+    Eigen::VectorXd innovationSubset(updateVector.size());                         // z - Hx
 
     stateSubset.setZero();
     measurementSubset.setZero();
@@ -212,23 +220,66 @@ void ExtendedKalmanFilter::correct(){
     kalmanGainSubset.setZero();
     innovationSubset.setZero();
 
+    for(int i = 0; i<updateVector.size() ; i++){
+        measurementSubset(i) = measurement.measurements(updateVector[i]);
+        stateSubset(i) = state_(updateVector[i]);
+        measurementCovarianceSubset(i, i) = measurement.measurementCovariances(updateVector[i]);
+    }
+
+    for (int i = 0; i < updateVector.size(); i++)
+    {
+      stateToMeasurementSubset(i, updateVector[i]) = 1;
+    }
 
 
-	// Innovation, y = z - h(x)
-	innovationSubset = (measurementSubset - stateSubset);
-	// Innovation Covariance, S = H * P * H' + R
-	Eigen::MatrixXd PHT = estimateErrorCovariance_ * stateToMeasurementSubset.transinPitchose();
-	Eigen::MatrixXd S  = (stateToMeasurementSubset * PHT + measurementCovarianceSubset).inverse();
-	// Kalman Gain, K = P * H' / S
-	kalmanGainSubset.noalias() = PHT * S;
-	// Updated State Estimate, x = x + K * y
-	state_.noalias() += kalmanGainSubset * innovationSubset;
-	// Updated Estimate Error Covariance, P = (I - K * H) * P
-	// estimateErrorCovariance_ = (identity_ - (kalmanGainSubset * measurementCovarianceSubset)) * estimateErrorCovariance_;
-	Eigen::MatrixXd gainResidual = identity_;
-	gainResidual.noalias() -= kalmanGainSubset * stateToMeasurementSubset;
-	estimateErrorCovariance_ = gainResidual * estimateErrorCovariance_ * gainResidual.transinPitchose();
-	estimateErrorCovariance_.noalias() += kalmanGainSubset *
-	                                    measurementCovarianceSubset *
-	                                    kalmanGainSubset.transinPitchose();
+    // Innovation, y = z - h(x)
+    innovationSubset = (measurementSubset - stateSubset);
+
+        // Wrap angles in the innovation
+    for (int i = 0; i < updateVector.size(); i++)
+    {
+      if (updateVector[i] == 3  ||
+          updateVector[i] == 4 ||
+          updateVector[i] == 5)
+      {
+        while (innovationSubset(i) < -3.141592653589793)
+        {
+          innovationSubset(i) += 6.283185307179587;
+        }
+
+        while (innovationSubset(i) > 3.141592653589793)
+        {
+          innovationSubset(i) -= 6.283185307179587;
+        }
+      }
+    }
+
+    // Innovation Covariance, S = H * P * H' + R
+    Eigen::MatrixXd PHT = estimateErrorCovariance_ * stateToMeasurementSubset.transpose();
+    Eigen::MatrixXd S  = (stateToMeasurementSubset * PHT + measurementCovarianceSubset).inverse();
+    // Kalman Gain, K = P * H' / S
+    kalmanGainSubset.noalias() = PHT * S;
+    // Updated State Estimate, x = x + K * y
+    state_.noalias() += kalmanGainSubset * innovationSubset;
+    // Updated Estimate Error Covariance, P = (I - K * H) * P
+    // estimateErrorCovariance_ = (identity_ - (kalmanGainSubset * measurementCovarianceSubset)) * estimateErrorCovariance_;
+    Eigen::MatrixXd gainResidual = identity_;
+    gainResidual.noalias() -= kalmanGainSubset * stateToMeasurementSubset;
+    estimateErrorCovariance_ = gainResidual * estimateErrorCovariance_ * gainResidual.transpose();
+    estimateErrorCovariance_.noalias() += kalmanGainSubset *
+                                        measurementCovarianceSubset *
+                                        kalmanGainSubset.transpose();
+}
+
+void ExtendedKalmanFilter::resetAngleOverflow()
+{
+}
+
+double ExtendedKalmanFilter::clamp(double rotation)
+{
+return rotation;
+}
+
+Eigen::VectorXd ExtendedKalmanFilter::getStates(){
+    return state_;
 }
