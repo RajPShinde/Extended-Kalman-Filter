@@ -1,6 +1,7 @@
 #ifndef INCLUDE_EXTENDEDKALMANFILTER_HPP_
 #define INCLUDE_EXTENDEDKALMANFILTER_HPP_
 
+#include <Eigen/Eigen>
 #include <cmath>
 
 class ExtendedKalmanFilter
@@ -25,11 +26,9 @@ class ExtendedKalmanFilter
 
         void correct();
 
-        void setErrorEstimateCovariance();
+        void setInitialErrorEstimateCovariance();
 
         void setProcessNoiseCovariance();
-
-        void removeGravitationalAcceleration();
 
     private:
 
