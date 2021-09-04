@@ -2,13 +2,15 @@
 
 ExtendedKalmanFilter::ExtendedKalmanFilter() {
     ROS_INFO_STREAM("Initializing EKF");
-    state_.resize(15);
-    transferFunction_.resize(15,15);
-    transferFunctionJacobian_.resize(15,15);
-    estimateErrorCovariance_.resize(15,15);
-    processNoiseCovariance_.resize(15,15);
-    identity_.resize(15,15);
+    // Resize vectors and matrices
+    state_.resize(stateSize);
+    transferFunction_.resize(stateSize,stateSize);
+    transferFunctionJacobian_.resize(stateSize,stateSize);
+    estimateErrorCovariance_.resize(stateSize,stateSize);
+    processNoiseCovariance_.resize(stateSize,stateSize);
+    identity_.resize(stateSize,stateSize);
 
+    // Set to zero
     state_.setZero();
     transferFunction_.setIdentity();
     transferFunctionJacobian_.setZero();
