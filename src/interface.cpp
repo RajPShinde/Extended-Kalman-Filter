@@ -39,4 +39,64 @@ void Interface::storeMeasurement(Eigen::VectorXd &measurements, Eigen::VectorXd 
 }
 
 void Interface::fuseData(){
+    ros::Rate loop(100);
+    while(ros::ok()){
+        // ROS_WARN_STREAM("Fuse");
+        if(firstMeasurement) {
+            ROS_WARN_STREAM("Fuse");
+            double dt = 0.01;
+            ekf_.predict(dt);
+            if(sensorMeasurements_.size()>0){
+                ekf_.correct(sensor_);
+            }
+            Eigen::VectorXd states = ekf_.getStates();
+            publishOdometry(states);
+            publishTransform(states);
+            sensorMeasurements_.clear();
+            loop.sleep();
+        }
+        ros::spinOnce();
+    }
+}
+
+void Interface::publishOdometry(Eigen::VectorXd states){
+    nav_msgs::Odometry odometry;
+    odometry.header.frame_id="map";
+    odometry.header.stamp=ros::Time::now();
+    odometry.child_frame_id="base_link";
+    odometry.pose.pose.position.x = states[0];
+    odometry.pose.pose.position.y = states[1];
+    odometry.pose.pose.position.z = states[2];
+    
+    tf2::Quaternion q;
+    q.setRPY( states[3], states[4], states[5]);
+    odometry.pose.pose.orientation.x = q.x();
+    odometry.pose.pose.orientation.y = q.y();
+    odometry.pose.pose.orientation.z = q.z();
+    odometry.pose.pose.orientation.w = q.w();
+    odometryPub_.publish(odometry);
+
+}
+void Interface::publishTransform(Eigen::VectorXd state){
+    // Publish Transform from Odom to base_link
+    static tf2_ros::TransformBroadcaster br;
+    geometry_msgs::TransformStamped transformStamped;
+    transformStamped.header.stamp = ros::Time::now();
+    transformStamped.header.frame_id = "map";
+    transformStamped.child_frame_id = "base_link";
+    transformStamped.transform.translation.x = 0;
+    transformStamped.transform.translation.y = 0;
+    transformStamped.transform.translation.z = 0;
+    tf2::Quaternion q;
+    q.setRPY(state(3), state(4), state(5));
+    transformStamped.transform.rotation.x = q.x();
+    transformStamped.transform.rotation.y = q.y();
+    transformStamped.transform.rotation.z = q.z();
+    transformStamped.transform.rotation.w = q.w();
+
+    br.sendTransform(transformStamped);
+    
+    if(visualizeModel_){
+        view_.visualizeModel();
+    }
 }
