@@ -39,6 +39,6 @@ add_executable(ekf src/main.cpp src/extendedKalmanFilter.cpp src/interface.cpp s
 target_link_libraries(ekf ${catkin_LIBRARIES})
 add_dependencies(ekf  ${catkin_EXPORTED_TARGETS})
 
-add_executable(covariance src/computeCovariance.cpp include/computeCovariance.hpp)
+add_executable(covariance src/setMeasurementCovariance.cpp include/setMeasurementCovariance.hpp)
 target_link_libraries(covariance ${catkin_LIBRARIES})
 add_dependencies(covariance  ${catkin_EXPORTED_TARGETS})
