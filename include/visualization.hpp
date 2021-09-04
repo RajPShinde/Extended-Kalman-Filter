@@ -1,6 +1,9 @@
 #ifndef INCLUDE_VISUALIZATION_HPP_
 #define INCLUDE_VISUALIZATION_HPP_
 
+#include <ros/ros.h>
+#include <visualization_msgs/Marker.h>
+
 class Visualization
 {
     public:
@@ -10,7 +13,7 @@ class Visualization
         *   @param none
         *   @return none
         */
-        Visualization();
+        Visualization(ros::NodeHandle& nh);
 
         /**
         *   @brief Destructor of Visualization
@@ -22,6 +25,8 @@ class Visualization
         void visualizeModel();
 
     private:
+        ros::NodeHandle visualize_;
+        ros::Publisher visPub_;
 
 };
 

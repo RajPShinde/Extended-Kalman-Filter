@@ -38,6 +38,10 @@ class ExtendedKalmanFilter
 
         Eigen::VectorXd getStates();
 
+        Eigen::MatrixXd getEstimateErrorCovariance();
+
+
+
     private:
 
         Eigen::VectorXd state_;

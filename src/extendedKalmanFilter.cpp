@@ -43,9 +43,9 @@ void ExtendedKalmanFilter::setProcessNoiseCovariance(){
     processNoiseCovariance_(StateMemberVroll, StateMemberVroll) = 0.01;
     processNoiseCovariance_(StateMemberVpitch, StateMemberVpitch) = 0.01;
     processNoiseCovariance_(StateMemberVyaw, StateMemberVyaw) = 0.02;
-    processNoiseCovariance_(StateMemberAx, StateMemberAx) = 100;
-    processNoiseCovariance_(StateMemberAy, StateMemberAy) = 100;
-    processNoiseCovariance_(StateMemberAz, StateMemberAz) = 100;
+    processNoiseCovariance_(StateMemberAx, StateMemberAx) = 0.01;
+    processNoiseCovariance_(StateMemberAy, StateMemberAy) = 0.01;
+    processNoiseCovariance_(StateMemberAz, StateMemberAz) = 0.015;
 }
 
 void ExtendedKalmanFilter::predict(double dt){
@@ -297,4 +297,8 @@ return rotation;
 
 Eigen::VectorXd ExtendedKalmanFilter::getStates(){
     return state_;
+}
+
+Eigen::MatrixXd ExtendedKalmanFilter::getEstimateErrorCovariance(){
+    return estimateErrorCovariance_;
 }
