@@ -6,8 +6,8 @@ Utilities::Utilities(){
 Utilities::~Utilities() {
 }
 
-// void Utilities::getOdometryMeasurement(){
-// }
+void Utilities::getOdometryMeasurement(const nav_msgs::Odometry &msg, ExtendedKalmanFilter &ekf_, Eigen::VectorXd &measurement, Eigen::VectorXd &measurementCovariance){
+}
 
 void Utilities::getAccelerationMeasurement(const sensor_msgs::Imu &msg, ExtendedKalmanFilter &ekf_, Eigen::VectorXd &measurement, Eigen::VectorXd &measurementCovariance){
 

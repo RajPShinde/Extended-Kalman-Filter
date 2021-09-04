@@ -41,7 +41,7 @@ class Interface
 
         void callbackIMU(const sensor_msgs::Imu &msg);
         
-        // void callbackOdometry(nav_msgs::Odometry &msg);
+        void callbackOdometry(const nav_msgs::Odometry &msg);
 
     private:
 
@@ -49,7 +49,8 @@ class Interface
         ExtendedKalmanFilter ekf_;
         Visualization view_;
         Utilities data_;
-        bool visualizeModel_, publishTransform_, useIMU_, useOdometry_ = true;
+        bool publishTransform_, useIMU_, useOdometry_ = true;
+        bool visualizeModel_ = true;
         int queueIMU_, queueOdometry_ = 1;
         ros::Subscriber odometrySub_;
         ros::Subscriber imuSub_;

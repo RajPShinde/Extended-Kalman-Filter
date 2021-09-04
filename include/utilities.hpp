@@ -33,7 +33,7 @@ class Utilities
         */
         ~Utilities();
 
-        // void getOdometryMeasurement();
+        void getOdometryMeasurement(const nav_msgs::Odometry &msg, ExtendedKalmanFilter &ekf_, Eigen::VectorXd &measurement, Eigen::VectorXd &measurementCovariance);
 
         void getAccelerationMeasurement(const sensor_msgs::Imu &msg, ExtendedKalmanFilter &ekf_, Eigen::VectorXd &measurement, Eigen::VectorXd &measurementCovariance);
 
