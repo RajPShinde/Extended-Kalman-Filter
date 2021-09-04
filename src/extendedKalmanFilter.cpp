@@ -1,14 +1,22 @@
 #include <extendedKalmanFilter.hpp>
 
 ExtendedKalmanFilter::ExtendedKalmanFilter() {
-	state_.setZero();
-	transferFunction_.setIdentity();
-	transferFunctionJacobian_.setZero();
-	estimateErrorCovariance_.setIdentity();
-	setErrorEstimateCovariance();
-	processNoiseCovariance_.setZero();
-	setanPitchrocessNoiseCovariance();
-	identity_.setIdentity();
+    ROS_INFO_STREAM("Initializing EKF");
+    state_.resize(15);
+    transferFunction_.resize(15,15);
+    transferFunctionJacobian_.resize(15,15);
+    estimateErrorCovariance_.resize(15,15);
+    processNoiseCovariance_.resize(15,15);
+    identity_.resize(15,15);
+
+    state_.setZero();
+    transferFunction_.setIdentity();
+    transferFunctionJacobian_.setZero();
+    estimateErrorCovariance_.setIdentity();
+    setInitialErrorEstimateCovariance();
+    processNoiseCovariance_.setZero();
+    setProcessNoiseCovariance();
+    identity_.setIdentity();
 }
 
 ExtendedKalmanFilter::~ExtendedKalmanFilter() {
@@ -19,6 +27,7 @@ void ExtendedKalmanFilter::setInitialErrorEstimateCovariance(){
 }
 
 void ExtendedKalmanFilter::setanPitchrocessNoiseCovariance(){
+    ROS_INFO_STREAM("Set Process Noise Covariance Matrix");
     processNoiseCovariance_(StateMemberX, StateMemberX) = 0.05;
     processNoiseCovariance_(StateMemberY, StateMemberY) = 0.05;
     processNoiseCovariance_(StateMemberZ, StateMemberZ) = 0.06;
@@ -31,9 +40,9 @@ void ExtendedKalmanFilter::setanPitchrocessNoiseCovariance(){
     processNoiseCovariance_(StateMemberVroll, StateMemberVroll) = 0.01;
     processNoiseCovariance_(StateMemberVpitch, StateMemberVpitch) = 0.01;
     processNoiseCovariance_(StateMemberVyaw, StateMemberVyaw) = 0.02;
-    processNoiseCovariance_(StateMemberAx, StateMemberAx) = 0.01;
-    processNoiseCovariance_(StateMemberAy, StateMemberAy) = 0.01;
-    processNoiseCovariance_(StateMemberAz, StateMemberAz) = 0.015;
+    processNoiseCovariance_(StateMemberAx, StateMemberAx) = 100;
+    processNoiseCovariance_(StateMemberAy, StateMemberAy) = 100;
+    processNoiseCovariance_(StateMemberAz, StateMemberAz) = 100;
 }
 
 void ExtendedKalmanFilter::removeGravitationalAcceleration(){
@@ -41,12 +50,13 @@ void ExtendedKalmanFilter::removeGravitationalAcceleration(){
 }
 
 void ExtendedKalmanFilter::predict(){
+    ROS_INFO_STREAM("Predicting");
 
-	// copy state variables
-	double x = state_(StateMemberX);
-	double y = state_(StateMemberY);
-	double z = state_(StateMemberZ);
-	double roll = state_(StateMemberRoll);
+    // copy state variables
+    double x = state_(StateMemberX);
+    double y = state_(StateMemberY);
+    double z = state_(StateMemberZ);
+    double roll = state_(StateMemberRoll);
     double pitch = state_(StateMemberPitch);
     double yaw = state_(StateMemberYaw);
     double xVel = state_(StateMemberVx);
@@ -60,103 +70,107 @@ void ExtendedKalmanFilter::predict(){
 
     // Required Trigonometric Operations
     double sinPitch = ::sin(pitch);
-    double cosinPitchitch = ::cos(pitch);
-    double cosinPitchitchInverse = 1.0 / cosinPitchitch;
-    double tanPitch = sinPitch * cosinPitchitch;
+    double cosPitch = ::cos(pitch);
+    double cosPitchInverse = 1.0 / cosPitch;
+    double tanPitch = sinPitch * cosPitch;
 
     double sinRoll = ::sin(roll);
-    double cosinRolloll = ::cos(roll);
+    double cosRoll = ::cos(roll);
 
     double sinYaw = ::sin(yaw);
     double cosYaw = ::cos(yaw);
 
-    transferFunction_(StateMemberX, StateMemberVx) = cosYaw * cosinPitchitch * delta;
-    transferFunction_(StateMemberX, StateMemberVy) = (cosYaw * sinPitch * sinRoll - sy * cosRoll) * delta;
-    transferFunction_(StateMemberX, StateMemberVz) = (cosYaw * sinPitch * cosRoll + sy * sinRoll) * delta;
-    transferFunction_(StateMemberX, StateMemberAx) = 0.5 * transferFunction_(StateMemberX, StateMemberVx) * delta;
-    transferFunction_(StateMemberX, StateMemberAy) = 0.5 * transferFunction_(StateMemberX, StateMemberVy) * delta;
-    transferFunction_(StateMemberX, StateMemberAz) = 0.5 * transferFunction_(StateMemberX, StateMemberVz) * delta;
-    transferFunction_(StateMemberY, StateMemberVx) = sy * cosinPitchitch * delta;
-    transferFunction_(StateMemberY, StateMemberVy) = (sy * sinPitch * sinRoll + cosYaw * cosRoll) * delta;
-    transferFunction_(StateMemberY, StateMemberVz) = (sy * sinPitch * cosRoll - cosYaw * sinRoll) * delta;
-    transferFunction_(StateMemberY, StateMemberAx) = 0.5 * transferFunction_(StateMemberY, StateMemberVx) * delta;
-    transferFunction_(StateMemberY, StateMemberAy) = 0.5 * transferFunction_(StateMemberY, StateMemberVy) * delta;
-    transferFunction_(StateMemberY, StateMemberAz) = 0.5 * transferFunction_(StateMemberY, StateMemberVz) * delta;
-    transferFunction_(StateMemberZ, StateMemberVx) = -sinPitch * delta;
-    transferFunction_(StateMemberZ, StateMemberVy) = cosinPitchitch * sinRoll * delta;
-    transferFunction_(StateMemberZ, StateMemberVz) = cosinPitchitch * cosRoll * delta;
-    transferFunction_(StateMemberZ, StateMemberAx) = 0.5 * transferFunction_(StateMemberZ, StateMemberVx) * delta;
-    transferFunction_(StateMemberZ, StateMemberAy) = 0.5 * transferFunction_(StateMemberZ, StateMemberVy) * delta;
-    transferFunction_(StateMemberZ, StateMemberAz) = 0.5 * transferFunction_(StateMemberZ, StateMemberVz) * delta;
-    transferFunction_(StateMemberRoll, StateMemberVroll) = delta;
-    transferFunction_(StateMemberRoll, StateMemberVpitch) = sinRoll * tanPitch * delta;
-    transferFunction_(StateMemberRoll, StateMemberVyaw) = cosRoll * tanPitch * delta;
-    transferFunction_(StateMemberPitch, StateMemberVpitch) = cosRoll * delta;
-    transferFunction_(StateMemberPitch, StateMemberVyaw) = -sinRoll * delta;
-    transferFunction_(StateMemberYaw, StateMemberVpitch) = sinRoll * cosinPitchitchi * delta;
-    transferFunction_(StateMemberYaw, StateMemberVyaw) = cosRoll * cosinPitchitchi * delta;
-    transferFunction_(StateMemberVx, StateMemberAx) = delta;
-    transferFunction_(StateMemberVy, StateMemberAy) = delta;
-    transferFunction_(StateMemberVz, StateMemberAz) = delta;
+    transferFunction_(StateMemberX, StateMemberVx) = cosYaw * cosPitch * dt;
+    transferFunction_(StateMemberX, StateMemberVy) = (cosYaw * sinPitch * sinRoll - sinYaw * cosRoll) * dt;
+    transferFunction_(StateMemberX, StateMemberVz) = (cosYaw * sinPitch * cosRoll + sinYaw * sinRoll) * dt;
+    transferFunction_(StateMemberX, StateMemberAx) = 0.5 * transferFunction_(StateMemberX, StateMemberVx) * dt;
+    transferFunction_(StateMemberX, StateMemberAy) = 0.5 * transferFunction_(StateMemberX, StateMemberVy) * dt;
+    transferFunction_(StateMemberX, StateMemberAz) = 0.5 * transferFunction_(StateMemberX, StateMemberVz) * dt;
+    transferFunction_(StateMemberY, StateMemberVx) = sinYaw * cosPitch * dt;
+    transferFunction_(StateMemberY, StateMemberVy) = (sinYaw * sinPitch * sinRoll + cosYaw * cosRoll) * dt;
+    transferFunction_(StateMemberY, StateMemberVz) = (sinYaw * sinPitch * cosRoll - cosYaw * sinRoll) * dt;
+    transferFunction_(StateMemberY, StateMemberAx) = 0.5 * transferFunction_(StateMemberY, StateMemberVx) * dt;
+    transferFunction_(StateMemberY, StateMemberAy) = 0.5 * transferFunction_(StateMemberY, StateMemberVy) * dt;
+    transferFunction_(StateMemberY, StateMemberAz) = 0.5 * transferFunction_(StateMemberY, StateMemberVz) * dt;
+    transferFunction_(StateMemberZ, StateMemberVx) = -sinPitch * dt;
+    transferFunction_(StateMemberZ, StateMemberVy) = cosPitch * sinRoll * dt;
+    transferFunction_(StateMemberZ, StateMemberVz) = cosPitch * cosRoll * dt;
+    transferFunction_(StateMemberZ, StateMemberAx) = 0.5 * transferFunction_(StateMemberZ, StateMemberVx) * dt;
+    transferFunction_(StateMemberZ, StateMemberAy) = 0.5 * transferFunction_(StateMemberZ, StateMemberVy) * dt;
+    transferFunction_(StateMemberZ, StateMemberAz) = 0.5 * transferFunction_(StateMemberZ, StateMemberVz) * dt;
+    transferFunction_(StateMemberRoll, StateMemberVroll) = dt;
+    transferFunction_(StateMemberRoll, StateMemberVpitch) = sinRoll * tanPitch * dt;
+    transferFunction_(StateMemberRoll, StateMemberVyaw) = cosRoll * tanPitch * dt;
+    transferFunction_(StateMemberPitch, StateMemberVpitch) = cosRoll * dt;
+    transferFunction_(StateMemberPitch, StateMemberVyaw) = -sinRoll * dt;
+    transferFunction_(StateMemberYaw, StateMemberVpitch) = sinRoll * cosPitchInverse * dt;
+    transferFunction_(StateMemberYaw, StateMemberVyaw) = cosRoll * cosPitchInverse * dt;
+    transferFunction_(StateMemberVx, StateMemberAx) = dt;
+    transferFunction_(StateMemberVy, StateMemberAy) = dt;
+    transferFunction_(StateMemberVz, StateMemberAz) = dt;
 
     // Predicted State, x = f(x,u) = transferFunction * previousStates
     state_ = transferFunction_ * state_;
+
+    // ROS_WARN_STREAM(state_(3)<<" "<<state_(4)<<" "<<state_(5));
+
+    resetAngleOverflow();
 
     // compute Jacobian of f(x,u) i.e F
     double xCoeff = 0.0;
     double yCoeff = 0.0;
     double zCoeff = 0.0;
-    double oneHalfATSquared = 0.5 * delta * delta;
+    double oneHalfATSquared = 0.5 * dt * dt;
 
     yCoeff = cosYaw * sinPitch * cosRoll + sinYaw * sinRoll;
     zCoeff = -cosYaw * sinPitch * sinRoll + sinYaw * cosRoll;
-    double dFx_dR = (yCoeff * yVel + zCoeff * zVel) * delta +
+    double dFx_dR = (yCoeff * yVel + zCoeff * zVel) * dt +
                     (yCoeff * yAcc + zCoeff * zAcc) * oneHalfATSquared;
-    double dFR_dR = 1.0 + (cosRoll * tanPitch * pitchVel - sinRoll * tanPitch * yawVel) * delta;
+    double dFR_dR = 1.0 + (cosRoll * tanPitch * pitchVel - sinRoll * tanPitch * yawVel) * dt;
 
     xCoeff = -cosYaw * sinPitch;
-    yCoeff = cosYaw * cosinPitchitch * sinRoll;
-    zCoeff = cosYaw * cosinPitchitch * cosRoll;
-    double dFx_dP = (xCoeff * xVel + yCoeff * yVel + zCoeff * zVel) * delta +
+    yCoeff = cosYaw * cosPitch * sinRoll;
+    zCoeff = cosYaw * cosPitch * cosRoll;
+    double dFx_dP = (xCoeff * xVel + yCoeff * yVel + zCoeff * zVel) * dt +
                     (xCoeff * xAcc + yCoeff * yAcc + zCoeff * zAcc) * oneHalfATSquared;
-    double dFR_dP = (cosinPitchitchi * cosinPitchitchi * sinRoll * pitchVel + cosinPitchitchi * cosinPitchitchi * cosRoll * yawVel) * delta;
+    double dFR_dP = (cosPitchInverse * cosPitchInverse * sinRoll * pitchVel + cosPitchInverse * cosPitchInverse * cosRoll * yawVel) * dt;
 
-    xCoeff = -sinYaw * cosinPitchitch;
+    xCoeff = -sinYaw * cosPitch;
     yCoeff = -sinYaw * sinPitch * sinRoll - cosYaw * cosRoll;
     zCoeff = -sinYaw * sinPitch * cosRoll + cosYaw * sinRoll;
-    double dFx_dY = (xCoeff * xVel + yCoeff * yVel + zCoeff * zVel) * delta +
+    double dFx_dY = (xCoeff * xVel + yCoeff * yVel + zCoeff * zVel) * dt +
                     (xCoeff * xAcc + yCoeff * yAcc + zCoeff * zAcc) * oneHalfATSquared;
 
     yCoeff = sinYaw * sinPitch * cosRoll - cosYaw * sinRoll;
     zCoeff = -sinYaw * sinPitch * sinRoll - cosYaw * cosRoll;
-    double dFy_dR = (yCoeff * yVel + zCoeff * zVel) * delta +
+    double dFy_dR = (yCoeff * yVel + zCoeff * zVel) * dt +
                     (yCoeff * yAcc + zCoeff * zAcc) * oneHalfATSquared;
-    double dFP_dR = (-sinRoll * pitchVel - cosRoll * yawVel) * delta;
+    double dFP_dR = (-sinRoll * pitchVel - cosRoll * yawVel) * dt;
 
     xCoeff = -sinYaw * sinPitch;
-    yCoeff = sinYaw * cosinPitchitch * sinRoll;
-    zCoeff = sinYaw * cosinPitchitch * cosRoll;
-    double dFy_dP = (xCoeff * xVel + yCoeff * yVel + zCoeff * zVel) * delta +
+    yCoeff = sinYaw * cosPitch* sinRoll;
+    zCoeff = sinYaw * cosPitch * cosRoll;
+    double dFy_dP = (xCoeff * xVel + yCoeff * yVel + zCoeff * zVel) * dt +
                     (xCoeff * xAcc + yCoeff * yAcc + zCoeff * zAcc) * oneHalfATSquared;
 
-    xCoeff = cosYaw * cosinPitchitch;
+    xCoeff = cosYaw * cosPitch;
     yCoeff = cosYaw * sinPitch * sinRoll - sinYaw * cosRoll;
     zCoeff = cosYaw * sinPitch * cosRoll + sinYaw * sinRoll;
-    double dFy_dY = (xCoeff * xVel + yCoeff * yVel + zCoeff * zVel) * delta +
+    double dFy_dY = (xCoeff * xVel + yCoeff * yVel + zCoeff * zVel) * dt +
                     (xCoeff * xAcc + yCoeff * yAcc + zCoeff * zAcc) * oneHalfATSquared;
 
-    yCoeff = cosinPitchitch * cosRoll;
-    zCoeff = -cosinPitchitch * sinRoll;
-    double dFz_dR = (yCoeff * yVel + zCoeff * zVel) * delta +
+    yCoeff = cosPitch * cosRoll;
+    zCoeff = -cosPitch * sinRoll;
+    double dFz_dR = (yCoeff * yVel + zCoeff * zVel) * dt +
                     (yCoeff * yAcc + zCoeff * zAcc) * oneHalfATSquared;
-    double dFY_dR = (cosRoll * cosinPitchitchi * pitchVel - sinRoll * cosinPitchitchi * yawVel) * delta;
+    double dFY_dR = (cosRoll * cosPitchInverse * pitchVel - sinRoll * cosPitchInverse * yawVel) * dt;
 
-    xCoeff = -cosinPitchitch;
+    xCoeff = -cosPitch;
     yCoeff = -sinPitch * sinRoll;
     zCoeff = -sinPitch * cosRoll;
-    double dFz_dP = (xCoeff * xVel + yCoeff * yVel + zCoeff * zVel) * delta +
+    double dFz_dP = (xCoeff * xVel + yCoeff * yVel + zCoeff * zVel) * dt +
                     (xCoeff * xAcc + yCoeff * yAcc + zCoeff * zAcc) * oneHalfATSquared;
-    double dFY_dP = (sinRoll * tanPitch * cosinPitchitchi * pitchVel + cosRoll * tanPitch * cosinPitchitchi * yawVel) * delta;
+    double dFY_dP = (sinRoll * tanPitch * cosPitchInverse * pitchVel + cosRoll * tanPitch * cosPitchInverse * yawVel) * dt;
 
     // Update only elemnts that change after taking jacobian
     transferFunctionJacobian_ = transferFunction_;
@@ -177,9 +191,8 @@ void ExtendedKalmanFilter::predict(){
     // Estimate Error Covariance Matrix, P = J * P * J' + Q
     estimateErrorCovariance_ = (transferFunctionJacobian_ *
                                 estimateErrorCovariance_ *
-                                transferFunctionJacobian_.transinPitchose());
-    estimateErrorCovariance_.noalias() += delta * (processNoiseCovariance);
-
+                                transferFunctionJacobian_.transpose());
+    estimateErrorCovariance_.noalias() += dt * (processNoiseCovariance_);
 
 }
 
