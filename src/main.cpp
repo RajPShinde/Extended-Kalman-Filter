@@ -1,6 +1,10 @@
 #include <interface.hpp>
+#include <ros/ros.h>
 
 int main(int argc, char **argv){
-    Interface stateEstiamtion;
+    ros::init(argc, argv, "Extended Kalman Filter");
+    ros::NodeHandle nh;
+    ROS_WARN_STREAM("main");
+    Interface stateEstiamtion(nh, true, false);
     return 0;
 }
