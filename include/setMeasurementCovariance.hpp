@@ -1,5 +1,5 @@
-#ifndef INCLUDE_COMPUTECOVARIANCE_HPP_
-#define INCLUDE_COMPUTECOVARIANCE_HPP_
+#ifndef INCLUDE_SETMEASUREMENTCOVARIANCE_HPP_
+#define INCLUDE_SETMEASUREMENTCOVARIANCE_HPP_
 
 #include <cmath>
 #include <ros/ros.h>
@@ -7,32 +7,32 @@
 #include <geometry_msgs/PoseStamped.h>
 #include <sensor_msgs/Imu.h>
 
-class ComputeCovariances
+class SetMeasurementCovariance
 {
     public:
         ros::Publisher imuPub;
         ros::Subscriber imuSub;
 
         /**
-        *   @brief Constructor of ComputeCovariances
+        *   @brief Constructor of SetMeasurementCovariance
         *   @param none
         *   @return none
         */
-        ComputeCovariances(ros::NodeHandle& nh, bool imu);
+        SetMeasurementCovariance(ros::NodeHandle& nh, bool imu);
 
         /**
-        *   @brief Destructor of ComputeCovariances
+        *   @brief Destructor of SetMeasurementCovariance
         *   @param none
         *   @return none
         */
-        ~ComputeCovariances();
+        ~SetMeasurementCovariance();
 
         void imuCallback(const sensor_msgs::Imu msg);
         
     private:
         double imu_;
-        ros::NodeHandle computeCovariances_;
+        ros::NodeHandle SetMeasurementCovariance_;
         sensor_msgs::Imu imuData;
 };
 
-#endif  //  INCLUDE_COMPUTECOVARIANCE_HPP_
+#endif  //  INCLUDE_SETMEASUREMENTCOVARIANCE_HPP_

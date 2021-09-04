@@ -77,4 +77,5 @@ void Utilities::getAccelerationMeasurement(const sensor_msgs::Imu &msg, Extended
   measurementCovariance(12) = msg.angular_velocity_covariance[0];
   measurementCovariance(13) = msg.angular_velocity_covariance[4];
   measurementCovariance(14) = msg.angular_velocity_covariance[8];
+
 }

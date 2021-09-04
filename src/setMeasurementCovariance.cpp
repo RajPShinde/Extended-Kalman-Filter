@@ -1,14 +1,14 @@
-#include <computeCovariance.hpp>
+#include <setMeasurementCovariance.hpp>
 
-ComputeCovariances::ComputeCovariances(ros::NodeHandle& nh, bool imu) : computeCovariances_(nh),imu_(imu) {
-  imuSub = computeCovariances_.subscribe("/imu", 1, &ComputeCovariances::imuCallback, this);
-  imuPub = computeCovariances_.advertise<sensor_msgs::Imu>("/imu/data",1);
+SetMeasurementCovariance::SetMeasurementCovariance(ros::NodeHandle& nh, bool imu) : SetMeasurementCovariance_(nh),imu_(imu) {
+  imuSub = SetMeasurementCovariance_.subscribe("/imu", 1, &SetMeasurementCovariance::imuCallback, this);
+  imuPub = SetMeasurementCovariance_.advertise<sensor_msgs::Imu>("/imu/data",1);
 }
 
-ComputeCovariances::~ComputeCovariances(){
+SetMeasurementCovariance::~SetMeasurementCovariance(){
 }
 
-void ComputeCovariances::imuCallback(const sensor_msgs::Imu msg){
+void SetMeasurementCovariance::imuCallback(const sensor_msgs::Imu msg){
   imuData = msg;
   imuData.orientation_covariance[0] = 1e-2;           // roll 
   imuData.orientation_covariance[4] = 1e-2;           // pitch
@@ -25,7 +25,7 @@ void ComputeCovariances::imuCallback(const sensor_msgs::Imu msg){
 int main(int argc, char **argv){
     ros::init(argc, argv, "covariance");
     ros::NodeHandle nh;
-    ComputeCovariances c(nh, true);
+    SetMeasurementCovariance c(nh, true);
     while(ros::ok()){
       ros::spinOnce();
     }

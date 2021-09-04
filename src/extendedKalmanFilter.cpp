@@ -275,9 +275,9 @@ void ExtendedKalmanFilter::correct(Measurement &measurement){
 
 void ExtendedKalmanFilter::resetAngleOverflow()
 {
-    state_(3)  = clampRotation(state_(3));
-    state_(4) = clampRotation(state_(4));
-    state_(5)   = clampRotation(state_(5));
+    state_(3)  = clamp(state_(3));
+    state_(4) = clamp(state_(4));
+    state_(5)   = clamp(state_(5));
 }
 
 double ExtendedKalmanFilter::clamp(double rotation)
