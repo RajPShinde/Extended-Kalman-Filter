@@ -23,10 +23,11 @@ ExtendedKalmanFilter::~ExtendedKalmanFilter() {
 }
 
 void ExtendedKalmanFilter::setInitialErrorEstimateCovariance(){
-	estimateErrorCovariance_ *= 1e-9;
+    ROS_INFO_STREAM("Set Error Estimate Covariance Matrix");
+    estimateErrorCovariance_ *= 1e-9;
 }
 
-void ExtendedKalmanFilter::setanPitchrocessNoiseCovariance(){
+void ExtendedKalmanFilter::setProcessNoiseCovariance(){
     ROS_INFO_STREAM("Set Process Noise Covariance Matrix");
     processNoiseCovariance_(StateMemberX, StateMemberX) = 0.05;
     processNoiseCovariance_(StateMemberY, StateMemberY) = 0.05;
@@ -45,11 +46,7 @@ void ExtendedKalmanFilter::setanPitchrocessNoiseCovariance(){
     processNoiseCovariance_(StateMemberAz, StateMemberAz) = 100;
 }
 
-void ExtendedKalmanFilter::removeGravitationalAcceleration(){
-
-}
-
-void ExtendedKalmanFilter::predict(){
+void ExtendedKalmanFilter::predict(double dt){
     ROS_INFO_STREAM("Predicting");
 
     // copy state variables
@@ -194,9 +191,10 @@ void ExtendedKalmanFilter::predict(){
                                 transferFunctionJacobian_.transpose());
     estimateErrorCovariance_.noalias() += dt * (processNoiseCovariance_);
 
+
 }
 
-void ExtendedKalmanFilter::correct(){
+void ExtendedKalmanFilter::correct(Measurement &measurement){
     ROS_INFO_STREAM("Correcting");
 
     std::vector<int> updateVector;
@@ -269,14 +267,29 @@ void ExtendedKalmanFilter::correct(){
     estimateErrorCovariance_.noalias() += kalmanGainSubset *
                                         measurementCovarianceSubset *
                                         kalmanGainSubset.transpose();
+
+    resetAngleOverflow();
 }
 
 void ExtendedKalmanFilter::resetAngleOverflow()
 {
+    state_(3)  = clampRotation(state_(3));
+    state_(4) = clampRotation(state_(4));
+    state_(5)   = clampRotation(state_(5));
 }
 
 double ExtendedKalmanFilter::clamp(double rotation)
 {
+    while (rotation > 3.141592653589793)
+    {
+      rotation -= 6.283185307179587;
+    }
+
+    while (rotation < -3.141592653589793)
+    {
+      rotation += 6.283185307179587;
+    }
+
 return rotation;
 }
 
