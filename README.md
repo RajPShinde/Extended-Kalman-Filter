@@ -1,5 +1,5 @@
 # Extended-Kalman-Filter
-Extended Kalman Filter for estimating 15-States (Pose, Twist & Acceleration)
+Extended Kalman Filter for estimating 15-States (Pose, Twist & Acceleration) using Omni-Directional model for prediction and measurements from IMU and Wheel Odometry.
 
 ## Dependencies
 1. ROS KInetic >=
