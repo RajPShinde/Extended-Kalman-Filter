@@ -6,7 +6,7 @@ Extended Kalman Filter for estimating 15-States (Pose, Twist & Acceleration)
 2. Eigen
 
 ## Results
-Increasing Covarinace as No Absolute Position Fused       |  Converged Covariance since Absolute Position is Fused
+Increasing Covarinace as No Absolute Position Fused (Data Fused- z, yaw, vx, vy, vz, Ax, omegaZ)       |  Converged Covariance since Absolute Position is Fused (Data Fused- x, y, z, yaw, vx, vy, vz, Ax, omegaZ)
 :-------------------------:|:-------------------------:
 <img src="/data/non-converging.gif"/> | <img src="/data/converged.gif"/>
 
