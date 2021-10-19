@@ -31,25 +31,46 @@ void ExtendedKalmanFilter::setInitialErrorEstimateCovariance(){
 
 void ExtendedKalmanFilter::setProcessNoiseCovariance(){
     ROS_INFO_STREAM("Set Process Noise Covariance Matrix");
-    processNoiseCovariance_(StateMemberX, StateMemberX) = 0.05;
-    processNoiseCovariance_(StateMemberY, StateMemberY) = 0.05;
-    processNoiseCovariance_(StateMemberZ, StateMemberZ) = 0.06;
-    processNoiseCovariance_(StateMemberRoll, StateMemberRoll) = 0.03;
-    processNoiseCovariance_(StateMemberPitch, StateMemberPitch) = 0.03;
-    processNoiseCovariance_(StateMemberYaw, StateMemberYaw) = 0.06;
-    processNoiseCovariance_(StateMemberVx, StateMemberVx) = 0.025;
-    processNoiseCovariance_(StateMemberVy, StateMemberVy) = 0.025;
-    processNoiseCovariance_(StateMemberVz, StateMemberVz) = 0.04;
-    processNoiseCovariance_(StateMemberVroll, StateMemberVroll) = 0.01;
-    processNoiseCovariance_(StateMemberVpitch, StateMemberVpitch) = 0.01;
-    processNoiseCovariance_(StateMemberVyaw, StateMemberVyaw) = 0.02;
+    processNoiseCovariance_(StateMemberX, StateMemberX) = 0.01;
+    processNoiseCovariance_(StateMemberY, StateMemberY) = 0.01;
+    processNoiseCovariance_(StateMemberZ, StateMemberZ) = 0.01;
+    processNoiseCovariance_(StateMemberRoll, StateMemberRoll) = 0.01;
+    processNoiseCovariance_(StateMemberPitch, StateMemberPitch) = 0.01;
+    processNoiseCovariance_(StateMemberYaw, StateMemberYaw) = 0.01;
+    processNoiseCovariance_(StateMemberVx, StateMemberVx) = 0.001;
+    processNoiseCovariance_(StateMemberVy, StateMemberVy) = 0.001;
+    processNoiseCovariance_(StateMemberVz, StateMemberVz) = 0.001;
+    processNoiseCovariance_(StateMemberVroll, StateMemberVroll) = 0.001;
+    processNoiseCovariance_(StateMemberVpitch, StateMemberVpitch) = 0.001;
+    processNoiseCovariance_(StateMemberVyaw, StateMemberVyaw) = 0.001;
     processNoiseCovariance_(StateMemberAx, StateMemberAx) = 0.01;
     processNoiseCovariance_(StateMemberAy, StateMemberAy) = 0.01;
-    processNoiseCovariance_(StateMemberAz, StateMemberAz) = 0.015;
+    processNoiseCovariance_(StateMemberAz, StateMemberAz) = 0.01;
 }
 
-void ExtendedKalmanFilter::predict(double dt){
+void ExtendedKalmanFilter::predict(double dt, double twoDimensionalMode){
     ROS_INFO_STREAM("Predicting");
+
+    if(twoDimensionalMode){
+        state_(StateMemberZ) =  0;
+        state_(StateMemberRoll) = 0;
+        state_(StateMemberPitch) = 0;
+        state_(StateMemberVy) = 0;
+        state_(StateMemberVz) = 0;
+        state_(StateMemberVpitch) = 0;
+        state_(StateMemberVroll) = 0;
+        state_(StateMemberAy) = 0;
+        state_(StateMemberAz) = 0;
+        estimateErrorCovariance_(2,2) = 0;
+        estimateErrorCovariance_(3,3) = 0;
+        estimateErrorCovariance_(4,4) = 0;
+        estimateErrorCovariance_(7,7) = 0;
+        estimateErrorCovariance_(8,8) = 0;
+        estimateErrorCovariance_(9,9) = 0;
+        estimateErrorCovariance_(10,10) = 0;
+        estimateErrorCovariance_(13,13) = 0;
+        estimateErrorCovariance_(14,14) = 0;     
+    }
 
     // copy state variables
     double x = state_(StateMemberX);

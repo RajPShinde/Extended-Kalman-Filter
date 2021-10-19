@@ -4,16 +4,11 @@
   <!-- IMU Covariance Generator -->
   <node name="covariance" pkg="extended_kalman_filter" type="covariance" output="screen"/>
 
-  <!-- Launch IMU Driver -->
-  <node name="openzen_sensor_node" pkg="openzen_sensor" type="openzen_sensor_node" output="screen">
-    <remap from="/imu/data" to="/imu"/>
-  </node>
-
   <!-- Transform -->
   <node pkg="tf" type="static_transform_publisher" name="base_link_to_base" args="-3.8 3.8 1 1.57 0.0 1.57 /base_link /base 40" />
 
   <!-- EKF Localization -->
-  <node name="ekf" pkg="extended_kalman_filter" type="ekf" clear_params="true"/> 
+  <node name="ekf" pkg="extended_kalman_filter" type="ekf" output="screen"/> 
 
   <!-- Rviz -->
   <node name="rviz" pkg="rviz" type="rviz" args="-d $(find extended_kalman_filter)/config/rviz.rviz" />

@@ -24,7 +24,7 @@ class ExtendedKalmanFilter
         */
         ~ExtendedKalmanFilter();
 
-        void predict(double dt);
+        void predict(double dt, double twoDimensionalMode);
 
         void correct(Measurement &measurement);
 

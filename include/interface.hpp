@@ -5,7 +5,6 @@
 #include <sensor_msgs/Imu.h>
 #include <nav_msgs/Odometry.h>
 #include <tf2_ros/transform_broadcaster.h>
-#include <visualization.hpp>
 #include <measurement.hpp>
 #include <utilities.hpp>
 #include <Eigen/Dense>
@@ -47,7 +46,6 @@ class Interface
 
         ros::NodeHandle interface_;
         ExtendedKalmanFilter ekf_;
-        Visualization view_;
         Utilities data_;
         bool publishTransform_, useIMU_, useOdometry_ = true;
         bool visualizeModel_ = true;
@@ -58,8 +56,9 @@ class Interface
         int stateSize_ = 15;
         std::vector<Measurement> sensorMeasurements_;
         Measurement sensor_;
-        std::vector<int> dataIMU = {0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1};  // x y z r p y vx vy vz vr vp vy ax ay az
-        std::vector<int> dataOdometry = {0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0}; // x y z r p y vx vy vz vr vp vy ax ay az
+        std::vector<int> dataIMU = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0};  // x y z r p y vx vy vz vr vp vy ax ay az
+        std::vector<int> dataOdometry = {1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 1, 0, 0, 0}; // x y z r p y vx vy vz vr vp vy ax ay az
+        double twoDimensionalMode = true;
         bool firstMeasurement = false;
 };
 

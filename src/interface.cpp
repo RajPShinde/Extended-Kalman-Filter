@@ -1,6 +1,6 @@
 #include <interface.hpp>
 
-Interface::Interface(ros::NodeHandle& nh, bool imu, bool odometry): interface_(nh), view_(nh), useIMU_(imu), useOdometry_(odometry) {
+Interface::Interface(ros::NodeHandle& nh, bool imu, bool odometry): interface_(nh), useIMU_(imu), useOdometry_(odometry) {
     imuSub_ = interface_.subscribe("/imu/data", 1, &Interface::callbackIMU, this);
     odometrySub_ = interface_.subscribe("/odom", 1, &Interface::callbackOdometry, this);
     odometryPub_ = interface_.advertise<nav_msgs::Odometry>("/odometry/fused",10);
@@ -15,7 +15,7 @@ void Interface::callbackIMU(const sensor_msgs::Imu &msg){
     Eigen::VectorXd measurementCovariance(stateSize_);
     measurement.setZero();
     measurementCovariance.setZero();
-    data_.getAccelerationMeasurement(msg, ekf_, measurement, measurementCovariance);
+    data_.getAccelerationMeasurement(msg, ekf_, measurement, measurementCovariance, twoDimensionalMode);
     storeMeasurement(measurement, measurementCovariance, dataIMU);
     firstMeasurement = true;
 }
@@ -25,7 +25,7 @@ void Interface::callbackOdometry(const nav_msgs::Odometry &msg){
     Eigen::VectorXd measurementCovariance(stateSize_);
     measurement.setZero();
     measurementCovariance.setZero();
-    data_.getOdometryMeasurement(msg, ekf_, measurement, measurementCovariance);
+    data_.getOdometryMeasurement(msg, ekf_, measurement, measurementCovariance, twoDimensionalMode);
     storeMeasurement(measurement, measurementCovariance, dataOdometry);
     firstMeasurement = true;
 }
@@ -35,18 +35,17 @@ void Interface::storeMeasurement(Eigen::VectorXd &measurements, Eigen::VectorXd 
     sensor_.measurementCovariances = measurementCovariances;
     sensor_.dataToUse = data;
     sensorMeasurements_.push_back(sensor_);
+    ekf_.correct(sensor_);
 }
 
 void Interface::fuseData(){
-    ros::Rate loop(100);
+    double frequency = 10;
+    ros::Rate loop(frequency);
     ROS_INFO_STREAM("Fusing");
     while(ros::ok()){
         if(firstMeasurement) {
-            double dt = 0.01;
-            ekf_.predict(dt);
-            if(sensorMeasurements_.size()>0){
-                ekf_.correct(sensor_);
-            }
+            double dt = 1/frequency;
+            ekf_.predict(dt, twoDimensionalMode);
             Eigen::VectorXd states = ekf_.getStates();
             publishOdometry(states);
             publishTransform(states);
@@ -65,7 +64,14 @@ void Interface::publishOdometry(Eigen::VectorXd states){
     odometry.pose.pose.position.x = states[0];
     odometry.pose.pose.position.y = states[1];
     odometry.pose.pose.position.z = states[2];
-    
+
+    odometry.twist.twist.linear.x = states[6];
+    odometry.twist.twist.linear.y = states[7];
+    odometry.twist.twist.linear.z = states[8];
+    odometry.twist.twist.angular.x = states[9];
+    odometry.twist.twist.angular.y = states[10];
+    odometry.twist.twist.angular.z = states[11];
+
     tf2::Quaternion q;
     q.setRPY( states[3], states[4], states[5]);
     odometry.pose.pose.orientation.x = q.x();
@@ -79,7 +85,13 @@ void Interface::publishOdometry(Eigen::VectorXd states){
     odometry.pose.covariance[14]=estimateErrorCovariance_(2, 2);   
     odometry.pose.covariance[21]=estimateErrorCovariance_(3, 3);
     odometry.pose.covariance[28]=estimateErrorCovariance_(4, 4);
-    odometry.pose.covariance[35]=estimateErrorCovariance_(5, 5); 
+    odometry.pose.covariance[35]=estimateErrorCovariance_(5, 5);
+    odometry.twist.covariance[0]=estimateErrorCovariance_(6, 6);
+    odometry.twist.covariance[7]=estimateErrorCovariance_(7, 7);
+    odometry.twist.covariance[14]=estimateErrorCovariance_(8, 8);   
+    odometry.twist.covariance[21]=estimateErrorCovariance_(9, 9);
+    odometry.twist.covariance[28]=estimateErrorCovariance_(10, 10);
+    odometry.twist.covariance[35]=estimateErrorCovariance_(11, 11); 
     odometryPub_.publish(odometry);
 
 }
@@ -101,8 +113,4 @@ void Interface::publishTransform(Eigen::VectorXd state){
     transformStamped.transform.rotation.w = q.w();
 
     br.sendTransform(transformStamped);
-    
-    if(visualizeModel_){
-        view_.visualizeModel();
-    }
 }

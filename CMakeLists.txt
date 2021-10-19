@@ -35,7 +35,7 @@ set(CMAKE_CXX_STANDARD 14)
 
 include_directories(include ${catkin_INCLUDE_DIRS})
 
-add_executable(ekf src/main.cpp src/extendedKalmanFilter.cpp src/interface.cpp src/utilities.cpp src/visualization.cpp include/extendedKalmanFilter.hpp include/interface.hpp include/utilities.hpp include/visualization.hpp include/measurement.hpp )
+add_executable(ekf src/main.cpp src/extendedKalmanFilter.cpp src/interface.cpp src/utilities.cpp include/extendedKalmanFilter.hpp include/interface.hpp include/utilities.hpp include/measurement.hpp )
 target_link_libraries(ekf ${catkin_LIBRARIES})
 add_dependencies(ekf  ${catkin_EXPORTED_TARGETS})
 

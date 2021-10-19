@@ -6,10 +6,64 @@ Utilities::Utilities(){
 Utilities::~Utilities() {
 }
 
-void Utilities::getOdometryMeasurement(const nav_msgs::Odometry &msg, ExtendedKalmanFilter &ekf_, Eigen::VectorXd &measurement, Eigen::VectorXd &measurementCovariance){
+void Utilities::getOdometryMeasurement(const nav_msgs::Odometry &msg, ExtendedKalmanFilter &ekf_, Eigen::VectorXd &measurement, Eigen::VectorXd &measurementCovariance, double twoDimensionalMode){
+    
+    tf2::Quaternion q(msg.pose.pose.orientation.x, msg.pose.pose.orientation.y, msg.pose.pose.orientation.z, msg.pose.pose.orientation.w);
+    tf2::Matrix3x3 m(q);
+    double roll, pitch, yaw;
+    m.getRPY(roll, pitch, yaw);
+
+    // Set all Measured Variables
+    measurement(0)= msg.pose.pose.position.x;
+    measurement(1)= msg.pose.pose.position.y;
+    measurement(2)= msg.pose.pose.position.z;  
+    measurement(3)= roll;
+    measurement(4)= pitch;
+    measurement(5)= yaw;
+    measurement(6)= msg.twist.twist.linear.x;
+    measurement(7)= msg.twist.twist.linear.y;
+    measurement(8)= msg.twist.twist.linear.z;
+    measurement(9)= msg.twist.twist.angular.x;
+    measurement(10)= msg.twist.twist.angular.y;
+    measurement(11)= msg.twist.twist.angular.z;
+
+    // Set all Covariances
+    measurementCovariance(0) = msg.pose.covariance[0];
+    measurementCovariance(1) = msg.pose.covariance[7];
+    measurementCovariance(2) = msg.pose.covariance[14];
+    measurementCovariance(3) = msg.pose.covariance[21];
+    measurementCovariance(4) = msg.pose.covariance[28];
+    measurementCovariance(5) = msg.pose.covariance[35];
+    measurementCovariance(6) = msg.twist.covariance[0];
+    measurementCovariance(7) = msg.twist.covariance[7];
+    measurementCovariance(8) = msg.twist.covariance[14];
+    measurementCovariance(9) = msg.twist.covariance[21];
+    measurementCovariance(10) = msg.twist.covariance[28];
+    measurementCovariance(11) = msg.twist.covariance[35];
+
+    if(twoDimensionalMode){
+        // Set all Measured Variables
+        measurement(2)= 0;  
+        measurement(3)= 0;
+        measurement(4)= 0;
+        measurement(7)= 0;
+        measurement(8)= 0;
+        measurement(9)= 0;
+        measurement(10)= 0;
+
+        // Set all Covariances
+        measurementCovariance(2) = 0;
+        measurementCovariance(3) = 0;
+        measurementCovariance(4) = 0;
+        measurementCovariance(7) = 0;
+        measurementCovariance(8) = 0;
+        measurementCovariance(9) = 0;
+        measurementCovariance(10) = 0;
+    }
+
 }
 
-void Utilities::getAccelerationMeasurement(const sensor_msgs::Imu &msg, ExtendedKalmanFilter &ekf_, Eigen::VectorXd &measurement, Eigen::VectorXd &measurementCovariance){
+void Utilities::getAccelerationMeasurement(const sensor_msgs::Imu &msg, ExtendedKalmanFilter &ekf_, Eigen::VectorXd &measurement, Eigen::VectorXd &measurementCovariance, double twoDimensionalMode){
 
 	// Accelerations reported by IMU
 	tf2::Vector3 acceleration(msg.linear_acceleration.x, msg.linear_acceleration.y, msg.linear_acceleration.z);
@@ -56,7 +110,7 @@ void Utilities::getAccelerationMeasurement(const sensor_msgs::Imu &msg, Extended
   double roll, pitch, yaw;
   m.getRPY(roll, pitch, yaw);
 
-	// Set all Measured Variables  
+  // Set all Measured Variables  
   measurement(3)= roll;
   measurement(4)= pitch;
   measurement(5)= yaw;
@@ -71,11 +125,29 @@ void Utilities::getAccelerationMeasurement(const sensor_msgs::Imu &msg, Extended
   measurementCovariance(3) = msg.orientation_covariance[0];
   measurementCovariance(4) = msg.orientation_covariance[4];
   measurementCovariance(5) = msg.orientation_covariance[8];
-  measurementCovariance(9) = msg.linear_acceleration_covariance[0];
-  measurementCovariance(10) = msg.linear_acceleration_covariance[4];
-  measurementCovariance(11) = msg.linear_acceleration_covariance[8];
-  measurementCovariance(12) = msg.angular_velocity_covariance[0];
-  measurementCovariance(13) = msg.angular_velocity_covariance[4];
-  measurementCovariance(14) = msg.angular_velocity_covariance[8];
+  measurementCovariance(9) = msg.angular_velocity_covariance[0];
+  measurementCovariance(10) = msg.angular_velocity_covariance[4];
+  measurementCovariance(11) = msg.angular_velocity_covariance[8];
+  measurementCovariance(12) = msg.linear_acceleration_covariance[0];
+  measurementCovariance(13) = msg.linear_acceleration_covariance[4];
+  measurementCovariance(14) = msg.linear_acceleration_covariance[8];
+
+  if(twoDimensionalMode){
+    // Set all Measured Variables  
+    measurement(3)= 0;
+    measurement(4)= 0;
+    measurement(9)= 0;
+    measurement(10)= 0;
+    measurement(13)= 0;
+    measurement(14)= 0;
+
+    // Set all Covariances
+    measurementCovariance(3) = 0;
+    measurementCovariance(4) = 0;
+    measurementCovariance(9) = 0;
+    measurementCovariance(10) = 0;
+    measurementCovariance(13) = 0;
+    measurementCovariance(14) = 0;
+  }
 
 }

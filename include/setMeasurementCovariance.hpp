@@ -6,12 +6,15 @@
 #include <nav_msgs/Path.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <sensor_msgs/Imu.h>
+#include <nav_msgs/Odometry.h>
 
 class SetMeasurementCovariance
 {
     public:
         ros::Publisher imuPub;
+        ros::Publisher odomPub;
         ros::Subscriber imuSub;
+        ros::Subscriber odomSub;
 
         /**
         *   @brief Constructor of SetMeasurementCovariance
@@ -28,11 +31,14 @@ class SetMeasurementCovariance
         ~SetMeasurementCovariance();
 
         void imuCallback(const sensor_msgs::Imu msg);
+
+        void odomCallback(const nav_msgs::Odometry msg);
         
     private:
         double imu_;
         ros::NodeHandle SetMeasurementCovariance_;
         sensor_msgs::Imu imuData;
+        nav_msgs::Odometry odomData_;
 };
 
 #endif  //  INCLUDE_SETMEASUREMENTCOVARIANCE_HPP_
