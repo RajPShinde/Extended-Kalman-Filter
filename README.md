@@ -6,10 +6,13 @@ Extended Kalman Filter for estimating 15-States (Pose, Twist & Acceleration)
 2. Eigen
 
 ## Results
-Increasing Covarinace           |  Converged Covariance
+Increasing Covarinace as No Absolute Position Fused       |  Converged Covariance since Absolute Position is Fused
 :-------------------------:|:-------------------------:
-No Absolute Position Fused, Hence position covariances keep on increasing as there is no correction data for position and it is being estimated by integrating velocities and acceleration, | Absolute Position Fused, Hence position covariances converge. 
-<img src="/data/non-converging.gif" width="300"/> | <img src="/data/converged.gif" width="300"/>
+<img src="/data/non-converging.gif"/> | <img src="/data/converged.gif"/>
+
+
+1. The position covariances keeps increasing in left column result as there is no correction data for position and it is being estimated by integrating velocities and acceleration.
+2. In the Second Column the Absolute Position is Fused, Hence position covariances converge as the position data from the odometry is being used for correction. 
 
 ## TODO
 1. Fix segmentation Fault when data selection vector has all 0 elements.
